@@ -1,0 +1,31 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+*.egg-info/
+
+# SQLite database
+*.db
+instance/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# VS Code / JetBrains IDE
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Static cache
+static/cache/
