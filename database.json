@@ -1,0 +1,107 @@
+{
+    "bookings": [
+        {
+            "user": "1",
+            "date": "2025-05-02",
+            "time": "10:00",
+            "room": "1",
+            "seat": "1"
+        },
+        {
+            "user": "1",
+            "date": "2025-05-02",
+            "start_time": "10:00",
+            "end_time": "16:10",
+            "room": "1",
+            "seat": "2"
+        },
+        {
+            "user": "1",
+            "date": "2025-05-02",
+            "start_time": "11:00",
+            "end_time": "12:00",
+            "room": "1",
+            "seat": "3"
+        },
+        {
+            "user": "1",
+            "date": "2025-05-02",
+            "start_time": "10:00",
+            "end_time": "12:00",
+            "room": "1",
+            "seat": "4"
+        },
+        {
+            "user": "1",
+            "date": "2025-05-02",
+            "start_time": "10:00",
+            "end_time": "12:00",
+            "room": "1",
+            "seat": "10"
+        },
+        {
+            "user": "ppump",
+            "date": "2025-05-02",
+            "start_time": "13:00",
+            "end_time": "14:00",
+            "room": "1",
+            "seat": "8"
+        },
+        {
+            "user": "ppump",
+            "date": "2025-05-31",
+            "start_time": "12:00",
+            "end_time": "14:00",
+            "room": "1",
+            "seat": "1"
+        },
+        {
+            "user": "ppump",
+            "date": "2025-05-31",
+            "start_time": "12:00",
+            "end_time": "14:00",
+            "room": "1",
+            "seat": "2"
+        },
+        {
+            "user": "ppump",
+            "date": "2025-05-23",
+            "start_time": "14:00",
+            "end_time": "16:00",
+            "room": "1",
+            "seat": "6"
+        },
+        {
+            "user": "ppump",
+            "date": "2025-05-23",
+            "start_time": "14:00",
+            "end_time": "16:00",
+            "room": "1",
+            "seat": "4"
+        },
+        {
+            "user": "ppump",
+            "date": "2025-05-23",
+            "start_time": "15:00",
+            "end_time": "15:30",
+            "room": "3",
+            "seat": "1"
+        },
+        {
+            "user": "ppump",
+            "date": "2025-07-01",
+            "start_time": "12:00",
+            "end_time": "14:00",
+            "room": "1",
+            "seat": "1"
+        },
+        {
+            "user": "mint",
+            "date": "2025-07-01",
+            "start_time": "12:00",
+            "end_time": "16:00",
+            "room": "1",
+            "seat": "4"
+        }
+    ]
+}
