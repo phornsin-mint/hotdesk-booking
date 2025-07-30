@@ -174,7 +174,7 @@
     let seatNumber = 1;
 
     const layoutWrapper = document.createElement('div');
-    layoutWrapper.classList.add('grid', 'grid-cols-2', 'gap-6', 'justify-center');
+    layoutWrapper.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-6', 'justify-center');
 
     for (let d = 0; d < desks; d++) {
       const groupWrapper = document.createElement('div');
@@ -206,7 +206,15 @@
     }
 
     seatContainer.appendChild(layoutWrapper);
-    document.getElementById("roomModal").classList.remove("hidden");
+    const modal = document.getElementById("roomModal");
+    modal.classList.add("hidden");
+    modal.classList.remove("opacity-100");
+    setTimeout(() => {
+      modal.classList.remove("hidden");
+      modal.scrollTop = 0;
+      modal.classList.add("opacity-0");
+      setTimeout(() => modal.classList.replace("opacity-0", "opacity-100"), 10);
+    }, 10);
   }
 
   function createSeatElement(seatNumber, bookedSeats) {
@@ -218,7 +226,9 @@
   }
 
   function closeModal() {
-    document.getElementById("roomModal").classList.add("hidden");
+    const modal = document.getElementById("roomModal");
+    modal.classList.replace("opacity-100", "opacity-0");
+    setTimeout(() => modal.classList.add("hidden"), 300);
   }
 
   function getRoomIdFromName(name) {
@@ -243,7 +253,60 @@
     const today = new Date().toISOString().slice(0, 10);
     document.getElementById("statusDate").value = today;
     fetchData();
+    const modal = document.getElementById("roomModal");
+    if (modal) {
+      modal.classList.add("hidden");
+      modal.classList.remove("opacity-100", "opacity-0");
+    }
   });
 </script>
+
+<style>
+  #roomModal {
+    transition: opacity 0.3s ease;
+    overflow-y: auto;
+    max-height: 90vh;
+    max-width: 100vw;
+    padding: 2rem;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 50;
+  }
+  #roomModal.hidden {
+    display: none;
+  }
+  #roomModal > div {
+    background: white;
+    padding: 1rem;
+    border-radius: 1rem;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  #roomModal .seat {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    font-weight: bold;
+    background-color: #d1d5db;
+    color: white;
+  }
+  #roomModal .seat.booked {
+    background-color: #dc2626;
+  }
+  #roomModal .seat.available {
+    background-color: #10b981;
+  }
+</style>
 </body>
 </html>
