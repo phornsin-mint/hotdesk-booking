@@ -6,36 +6,23 @@
   <title>Hot Desk Booking</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-
-  <!-- Swup.js -->
   <script src="https://unpkg.com/swup@4"></script>
-
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
+    body { font-family: 'Inter', sans-serif; }
+    table th, table td { text-align: center; }
+    .transition-fade { transition: opacity 0.4s ease; }
+    html.is-animating .transition-fade,
+    html.is-leaving .transition-fade { opacity: 0; }
+    .seat-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 1rem; }
+    .seat {
+      width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
+      background-color: #d1d5db; color: white; font-weight: bold; border-radius: 0.5rem;
     }
-
-    table th, table td {
-      text-align: center;
-    }
-
-    /* Smooth Fade Transitions */
-    .transition-fade {
-      transition: opacity 0.4s ease;
-    }
-
-    html.is-animating .transition-fade {
-      opacity: 0;
-    }
-
-    html.is-leaving .transition-fade {
-      opacity: 0;
-    }
+    .seat.booked { background-color: #dc2626; }
+    .seat.available { background-color: #10b981; }
   </style>
 </head>
-
 <body id="swup" class="bg-blue-50 text-gray-800 pt-24 transition-fade">
-
   <!-- Navbar -->
   <nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md shadow-sm">
     <div class="max-w-7xl mx-auto px-4">
@@ -45,21 +32,15 @@
           <a href="/booking" class="text-gray-700 hover:text-blue-600 transition">จองที่นั่ง</a>
           {% if 'user' in session %}
             <span class="text-gray-600">ยินดีต้อนรับ, <strong>{{ session['user'] }}</strong>!</span>
-
             <button class="relative hover:text-blue-600 transition" title="แจ้งเตือน">
               <svg class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M15 17h5l-1.4-1.4A2 2 0 0118 14V11a6 6 0 00-4-5.7V5a2 2 0 10-4 0v.3A6 6 0 006 11v3a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1h6z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0118 14V11a6 6 0 00-4-5.7V5a2 2 0 10-4 0v.3A6 6 0 006 11v3a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1h6z"/>
               </svg>
               <span class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
-
             <div class="w-9 h-9 rounded-full overflow-hidden border-2 border-gray-300">
-                <img src="https://www.gravatar.com/avatar/?d=mp"
-                alt="profile"
-                class="w-9 h-9 rounded-full border border-gray-300 object-cover">           
+              <img src="https://www.gravatar.com/avatar/?d=mp" alt="profile" class="w-9 h-9 rounded-full border border-gray-300 object-cover">           
             </div>
-
             <a href="/logout" class="bg-red-500 text-white px-4 py-2 rounded-lg shadow hover:bg-red-600 transition">Logout</a>
           {% else %}
             <a href="/login" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition">Login</a>
@@ -71,18 +52,14 @@
 
   <!-- Banner -->
   <div class="max-w-7xl mx-auto mt-1 rounded-xl overflow-hidden shadow-lg">
-    <div class="relative h-64 bg-cover bg-no-repeat text-white flex items-center justify-center"
-       style="background-image: url('/static/img/image0_0.jpg'); background-position: center 60%;">
+    <div class="relative h-64 bg-cover bg-no-repeat text-white flex items-center justify-center" style="background-image: url('/static/img/image0_0.jpg'); background-position: center 60%;">
       <div class="absolute inset-0 bg-black/60"></div>
       <div class="relative z-10 flex flex-col sm:flex-row items-center gap-4 bg-white/80 backdrop-blur-md px-6 py-4 rounded-xl shadow-lg">
         <div class="flex items-center gap-2">
           <label for="statusDate" class="text-base font-semibold text-blue-800">เลือกวันที่:</label>
-          <input type="date" id="statusDate" class="text-blue-800 border border-blue-300 p-2 rounded-md shadow-sm focus:ring focus:ring-blue-200"
-          onchange="fetchData()">
+          <input type="date" id="statusDate" class="text-blue-800 border border-blue-300 p-2 rounded-md shadow-sm focus:ring focus:ring-blue-200" onchange="fetchData()">
         </div>
-        <a href="/booking" class="bg-blue-600 text-white px-5 py-2 rounded-md shadow hover:bg-blue-700 transition whitespace-nowrap text-sm">
-          ไปที่หน้าจองที่นั่ง
-        </a>
+        <a href="/booking" class="bg-blue-600 text-white px-5 py-2 rounded-md shadow hover:bg-blue-700 transition whitespace-nowrap text-sm">ไปที่หน้าจองที่นั่ง</a>
       </div>
     </div>
   </div>
@@ -90,10 +67,17 @@
   <!-- Room Status -->
   <section class="max-w-7xl mx-auto mt-8 p-6 bg-white shadow-lg rounded-2xl">
     <h2 class="text-2xl font-bold text-blue-800 mb-6">สถานะห้องทำงาน</h2>
-    <div id="roomStatus" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      <!-- Cards will be injected here -->
-    </div>
+    <div id="roomStatus" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
   </section>
+
+  <!-- Room Popup Modal -->
+  <div id="roomModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-center items-center hidden">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-3xl p-6 relative">
+      <button onclick="closeModal()" class="absolute top-3 right-3 text-gray-500 hover:text-red-500 text-xl">&times;</button>
+      <h2 id="modalRoomTitle" class="text-xl font-bold text-blue-800 mb-4">สถานะที่นั่ง</h2>
+      <div id="seatContainer" class="seat-container"></div>
+    </div>
+  </div>
 
   <!-- Booking List -->
   <section class="max-w-7xl mx-auto mt-8 p-6 bg-white shadow-lg rounded-2xl">
@@ -111,9 +95,7 @@
             <th class="px-4 py-2 border">ยกเลิก</th>
           </tr>
         </thead>
-        <tbody id="bookingList" class="divide-y divide-gray-200 bg-white">
-          <!-- Bookings will be injected here -->
-        </tbody>
+        <tbody id="bookingList" class="divide-y divide-gray-200 bg-white"></tbody>
       </table>
     </div>
   </section>
@@ -122,81 +104,149 @@
     &copy; 2025 IPST | Hot Desk System
   </footer>
 
-  <!-- Swup Init -->
   <script>
-    const swup = new Swup();
-  </script>
+  const swup = new Swup();
+  const seatCount = { '1': 10, '2': 20, '3': 15, '4': 10, '5': 30 };
 
-  <!-- Fetch Room and Booking Data -->
-  <script>
-    async function fetchData() {
-      const date = document.getElementById('statusDate').value;
-      if (!date) return;
+  async function fetchData() {
+    const date = document.getElementById('statusDate').value;
+    if (!date) return;
 
-      const roomRes = await fetch(`/api/room_status?date=${date}`);
-      const rooms = await roomRes.json();
-      const roomStatus = document.getElementById("roomStatus");
-      roomStatus.innerHTML = "";
+    const roomRes = await fetch(`/api/room_status?date=${date}`);
+    const rooms = await roomRes.json();
+    const roomStatus = document.getElementById("roomStatus");
+    roomStatus.innerHTML = "";
 
-      rooms.forEach(room => {
-        const card = document.createElement("div");
-        card.className = `p-6 rounded-xl shadow-md text-center transition hover:scale-105 duration-200 ${
-          room.availableSeats > 0
-            ? 'bg-blue-50 border-l-4 border-blue-400 text-blue-900'
-            : 'bg-red-50 border-l-4 border-red-400 text-red-900'
-        }`;
-        card.innerHTML = `
-          <div class="text-lg font-semibold">${room.name}</div>
-          <div class="mt-2 text-sm">ที่นั่งว่าง: ${room.availableSeats}/${room.totalSeats}</div>
-        `;
-        roomStatus.appendChild(card);
-      });
+    rooms.forEach(room => {
+      const card = document.createElement("div");
+      card.className = `p-6 rounded-xl shadow-md text-center transition hover:scale-105 duration-200 cursor-pointer ${
+        room.availableSeats > 0
+          ? 'bg-blue-50 border-l-4 border-blue-400 text-blue-900'
+          : 'bg-red-50 border-l-4 border-red-400 text-red-900'
+      }`;
+      card.innerHTML = `
+        <div class="text-lg font-semibold">${room.name}</div>
+        <div class="mt-2 text-sm">ที่นั่งว่าง: ${room.availableSeats}/${room.totalSeats}</div>
+      `;
+      card.onclick = () => showRoomStatus(room.id || getRoomIdFromName(room.name), room.name);
+      roomStatus.appendChild(card);
+    });
 
-      const bookRes = await fetch(`/api/bookings?date=${date}`);
-      const bookings = await bookRes.json();
-      const bookingList = document.getElementById("bookingList");
-      bookingList.innerHTML = "";
+    const bookRes = await fetch(`/api/bookings?date=${date}`);
+    const bookings = await bookRes.json();
+    const bookingList = document.getElementById("bookingList");
+    bookingList.innerHTML = "";
 
-      bookings.forEach(b => {
-        const row = document.createElement("tr");
+    bookings.forEach(b => {
+      const row = document.createElement("tr");
+      let cancelBtn = "";
+      if (b.user === "{{ session['user'] if 'user' in session else '' }}") {
+        cancelBtn = `<button class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 hover:scale-105 transition" onclick="cancelBooking('${b.seat}')">ยกเลิก</button>`;
+      }
+      row.innerHTML = `
+        <td class="border px-4 py-2">${b.user}</td>
+        <td class="border px-4 py-2">${b.date}</td>
+        <td class="border px-4 py-2">${b.start_time}</td>
+        <td class="border px-4 py-2">${b.end_time}</td>
+        <td class="border px-4 py-2">${b.room}</td>
+        <td class="border px-4 py-2">${b.seat}</td>
+        <td class="border px-4 py-2">${cancelBtn}</td>
+      `;
+      bookingList.appendChild(row);
+    });
+  }
 
-        let cancelBtn = "";
-        if (b.user === "{{ session['user'] if 'user' in session else '' }}") {
-          cancelBtn = `<button class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 hover:scale-105 transition" onclick="cancelBooking('${b.seat}')">ยกเลิก</button>`;
-        }
+  async function showRoomStatus(roomId, roomName) {
+    const date = document.getElementById('statusDate').value || new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
 
-        row.innerHTML = `
-          <td class="border px-4 py-2">${b.user}</td>
-          <td class="border px-4 py-2">${b.date}</td>
-          <td class="border px-4 py-2">${b.start_time}</td>
-          <td class="border px-4 py-2">${b.end_time}</td>
-          <td class="border px-4 py-2">${b.room}</td>
-          <td class="border px-4 py-2">${b.seat}</td>
-          <td class="border px-4 py-2">${cancelBtn}</td>
-        `;
-        bookingList.appendChild(row);
-      });
+    const res = await fetch(`/api/booked_seats?room=${roomId}&date=${date}&start_time=${currentTime}&end_time=23:59`);
+    const data = await res.json();
+    const bookedSeats = data.map(item => item.seat);
+    const seatContainer = document.getElementById("seatContainer");
+    const title = document.getElementById("modalRoomTitle");
+    title.textContent = `ผังที่นั่ง ${roomName} (${date})`;
+    seatContainer.innerHTML = "";
+
+    const totalSeats = seatCount[roomId];
+    const desks = Math.ceil(totalSeats / 4);
+    let seatNumber = 1;
+
+    const layoutWrapper = document.createElement('div');
+    layoutWrapper.classList.add('grid', 'grid-cols-2', 'gap-6', 'justify-center');
+
+    for (let d = 0; d < desks; d++) {
+      const groupWrapper = document.createElement('div');
+      groupWrapper.classList.add('flex', 'flex-col', 'items-center', 'space-y-2');
+
+      const topRow = document.createElement('div');
+      topRow.classList.add('flex', 'gap-2');
+      for (let i = 0; i < 2 && seatNumber <= totalSeats; i++) {
+        const seat = createSeatElement(seatNumber++, bookedSeats);
+        topRow.appendChild(seat);
+      }
+
+      const desk = document.createElement('div');
+      desk.classList.add('desk');
+      desk.textContent = 'โต๊ะ ' + (d + 1);
+      desk.style.cssText = 'width: 120px; height: 40px; background-color: #facc15; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-weight: bold;';
+
+      const bottomRow = document.createElement('div');
+      bottomRow.classList.add('flex', 'gap-2');
+      for (let i = 0; i < 2 && seatNumber <= totalSeats; i++) {
+        const seat = createSeatElement(seatNumber++, bookedSeats);
+        bottomRow.appendChild(seat);
+      }
+
+      groupWrapper.appendChild(topRow);
+      groupWrapper.appendChild(desk);
+      groupWrapper.appendChild(bottomRow);
+      layoutWrapper.appendChild(groupWrapper);
     }
 
-    async function cancelBooking(seat) {
-      if (confirm("คุณต้องการยกเลิกการจองที่นั่งนี้หรือไม่?")) {
-        const response = await fetch(`/cancel/${seat}`, { method: "POST" });
-        const result = await response.json();
+    seatContainer.appendChild(layoutWrapper);
+    document.getElementById("roomModal").classList.remove("hidden");
+  }
 
-        if (response.ok) {
-          alert("✅ " + result.message);
-          fetchData();
-        } else {
-          alert("❌ " + result.error);
-        }
+  function createSeatElement(seatNumber, bookedSeats) {
+    const seat = document.createElement("div");
+    seat.className = "seat";
+    seat.textContent = seatNumber;
+    seat.classList.add(bookedSeats.includes(seatNumber.toString()) ? "booked" : "available");
+    return seat;
+  }
+
+  function closeModal() {
+    document.getElementById("roomModal").classList.add("hidden");
+  }
+
+  function getRoomIdFromName(name) {
+    const match = name.match(/(\d+)/);
+    return match ? match[1] : '1';
+  }
+
+  async function cancelBooking(seat) {
+    if (confirm("คุณต้องการยกเลิกการจองที่นั่งนี้หรือไม่?")) {
+      const response = await fetch(`/cancel/${seat}`, { method: "POST" });
+      const result = await response.json();
+      if (response.ok) {
+        alert("✅ " + result.message);
+        fetchData();
+      } else {
+        alert("❌ " + result.error);
       }
     }
+  }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const today = new Date().toISOString().slice(0, 10);
-      document.getElementById("statusDate").value = today;
-      fetchData();
-    });
-  </script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const today = new Date().toISOString().slice(0, 10);
+    document.getElementById("statusDate").value = today;
+    fetchData();
+  });
+</script>
+
+
+
 </body>
 </html>
