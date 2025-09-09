@@ -29,7 +29,8 @@
       <div class="flex justify-between items-center h-16">
         <a href="/" class="text-2xl font-bold text-blue-600 tracking-wide transition hover:opacity-80">HotDesk IPST</a>
         <div class="flex items-center space-x-4">
-          <a href="/booking" class="text-gray-700 hover:text-blue-600 transition">จองที่นั่ง</a>
+          <a href="/booking" class="text-gray-700 hover:text-blue-600 transition">Booking</a>
+          <a href="/my-reservations" class="text-gray-700 hover:text-blue-600 transition">My Reservations</a>
           {% if 'user' in session %}
             <span class="text-gray-600">ยินดีต้อนรับ, <strong>{{ session['user'] }}</strong>!</span>
             <button class="relative hover:text-blue-600 transition" title="แจ้งเตือน">

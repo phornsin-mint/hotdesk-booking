@@ -4,87 +4,171 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hot Desk Booking</title>
+
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Flatpickr -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
   <style>
-    .seat.selected { background-color: #4caf50 !important; transform: scale(1.1); }
-    .seat.booked { background-color: #dc2626 !important; cursor: not-allowed; }
-    .seat:hover { background-color: #34d399; }
-    .desk {
-      width: 120px; height: 60px; background-color: #facc15;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: bold; border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    /* ===== Colors & tokens (HSL friendly) ===== */
+    :root {
+      --bg: hsl(210 20% 98%);
+      --fg: hsl(222 84% 5%);
+      --primary: hsl(217 91% 60%);
+      --accent-soft: hsl(217 91% 95%);
+      --muted: hsl(214 32% 91%);
+      --selected: hsl(45 93% 47%);
+      --ring: hsl(217 91% 60% / .6);
     }
-    .seat-container {
-      display: flex; flex-wrap: wrap; justify-content: center;
-      gap: 20px; margin-top: 20px;
+
+    /* ===== Seat states ===== */
+    .seat { transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease; }
+    .seat:hover { transform: translateY(-1px); }
+    .seat.available { background: var(--accent-soft); color: hsl(217 91% 40%); }
+    .seat.taken {
+    background: #facc15;  /* เหลือง */
+    color: #000;          /* ตัวอักษรดำให้อ่านง่าย */
+    cursor: not-allowed;
     }
-    .seat-group { display: flex; flex-direction: column; align-items: center; }
+
+    .seat.selected {
+    background: #16a34a;  /* เขียว */
+    color: white;
+    box-shadow: 0 0 0 3px var(--ring);
+    }
+
+
+    /* ===== Desk layout (keep the original grouping: 2 seats – desk – 2 seats) ===== */
+    .seat-container { display:flex; flex-wrap:wrap; justify-content:center; gap:20px; margin-top:8px; }
+    .seat-group { display:flex; flex-direction:column; align-items:center; gap:10px; width:200px; }
+    .row { display:flex; gap:16px; }
+    .desk { width:120px; height:56px; background:#facc15; display:flex; align-items:center; justify-content:center; font-weight:700; border-radius:12px; box-shadow:0 6px 12px rgba(0,0,0,.08); }
   </style>
 </head>
-<body class="bg-blue-50 text-gray-800 min-h-screen py-10 px-4">
-  <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-10 gap-6">
-    <!-- ด้านซ้าย: 30% ฟอร์มจอง -->
-    <div class="col-span-10 md:col-span-3 bg-white p-6 rounded-xl shadow-lg">
-      <h1 class="text-2xl font-bold mb-6 text-blue-700">จองที่นั่ง</h1>
 
-      <form id="bookingForm" class="grid gap-4">
-        <div>
-          <label for="date" class="block text-sm font-medium text-blue-800">เลือกวันที่:</label>
-          <input type="date" id="date" name="date" class="w-full border border-blue-300 p-2 rounded shadow-sm" required />
-        </div>
-        <div>
-          <label for="start_time" class="block text-sm font-medium text-blue-800">เวลาเริ่มต้น:</label>
-          <input type="text" id="start_time" name="start_time" class="w-full border border-blue-300 p-2 rounded shadow-sm" required />
-        </div>
-        <div>
-          <label for="end_time" class="block text-sm font-medium text-blue-800">เวลาสิ้นสุด:</label>
-          <input type="text" id="end_time" name="end_time" class="w-full border border-blue-300 p-2 rounded shadow-sm" required />
-        </div>
-        <div>
-          <label for="room" class="block text-sm font-medium text-blue-800">เลือกห้อง:</label>
-          <select id="room" name="room" class="w-full border border-blue-300 p-2 rounded shadow-sm" required>
+<body class="min-h-screen" style="background:var(--bg); color:var(--fg)">
+  <!-- Header -->
+  <!-- Navbar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md shadow-sm">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="flex justify-between items-center h-16">
+      <a href="/" class="text-2xl font-bold text-blue-600 tracking-wide hover:opacity-80">HotDesk IPST</a>
+
+      <div class="flex items-center space-x-2">
+        <!-- หน้าแรก -->
+        <a href="/"
+           class="px-3 py-2 rounded-md transition
+           {% if request.path == '/' %} bg-blue-600 text-white {% else %} text-gray-700 hover:text-blue-600 {% endif %}">
+          Home
+        </a>
+
+        <!-- จองที่นั่ง -->
+        <a href="/booking"
+           class="px-3 py-2 rounded-md transition
+           {% if request.path.startswith('/booking') %} bg-blue-600 text-white {% else %} text-gray-700 hover:text-blue-600 {% endif %}">
+          Booking
+        </a>
+
+        <!-- My Reservations -->
+        <a href="/my-reservations"
+           class="px-3 py-2 rounded-md transition
+           {% if request.path.startswith('/my-reservations') %} bg-blue-600 text-white {% else %} text-gray-700 hover:text-blue-600 {% endif %}">
+          My Reservations
+        </a>
+
+        <!-- ปุ่ม Logout -->
+        <a href="/logout"
+           class="ml-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow hover:bg-red-600 transition">
+          Logout
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+
+  <main class="max-w-6xl mx-auto px-6 py-8 pt-24 grid grid-cols-1 md:grid-cols-5 gap-6">
+    <!-- Controls -->
+    <section class="md:col-span-2 bg-white/90 rounded-2xl border border-slate-200 shadow p-4 md:p-6">
+      <h2 class="text-lg font-semibold mb-4">ฟอร์มการจอง</h2>
+      <div class="grid gap-3">
+        <label class="text-sm">
+          วันที่
+          <input id="date" type="date" class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3 outline-none focus:ring-2 focus:ring-[var(--ring)]">
+        </label>
+        <label class="text-sm">
+          เวลาเริ่มต้น
+          <input id="start_time" type="text" class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3 outline-none focus:ring-2 focus:ring-[var(--ring)]">
+        </label>
+        <label class="text-sm">
+          เวลาสิ้นสุด
+          <input id="end_time" type="text" class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3 outline-none focus:ring-2 focus:ring-[var(--ring)]">
+        </label>
+        <label class="text-sm">
+          ห้อง
+          <select id="room" class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3 outline-none focus:ring-2 focus:ring-[var(--ring)]">
             <option value="1">ห้อง 1 (10 ที่นั่ง)</option>
             <option value="2">ห้อง 2 (20 ที่นั่ง)</option>
             <option value="3">ห้อง 3 (15 ที่นั่ง)</option>
             <option value="4">ห้อง 4 (10 ที่นั่ง)</option>
             <option value="5">ห้อง 5 (30 ที่นั่ง)</option>
           </select>
+        </label>
+        <!-- Legend -->
+        <div class="flex items-center gap-4 text-sm text-slate-600 mt-2">
+          <span class="inline-flex items-center gap-2">
+          <span class="inline-block w-3 h-3 rounded bg-blue-100"></span> ว่าง
+          </span>
+        <span class="inline-flex items-center gap-2">
+        <span class="inline-block w-3 h-3 rounded bg-yellow-400"></span> ถูกจอง
+        </span>
+        <span class="inline-flex items-center gap-2">
+        <span class="inline-block w-3 h-3 rounded bg-green-600"></span> ที่เลือก
+        </span>
         </div>
+        <button id="openConfirm" class="mt-3 h-11 rounded-xl text-white hover:brightness-110 transition" style="background:var(--primary)">ยืนยันการจอง</button>
+        <a href="/" class="text-center text-[hsl(217_91%_60%)] hover:underline text-sm">ย้อนกลับหน้าแรก</a>
+      </div>
+    </section>
 
-        <div>
-  <label class="block text-sm font-medium text-blue-800">เลือกที่นั่ง:</label>
-  <div id="seatContainer" class="seat-container mt-2"></div>
-  <p class="text-center text-sm text-gray-500 mt-2">แตะที่นั่งเพื่อเลือก</p>
-</div>
+    <!-- Image + Seats -->
+    <section class="md:col-span-3 space-y-6">
+      <div class="bg-white/90 rounded-2xl border border-slate-200 shadow p-4">
+        <img id="roomImage" src="/static/img/image0_0.jpg" alt="แผนผังห้อง" class="w-full h-64 md:h-72 object-cover rounded-xl border border-slate-200" />
+      </div>
 
-        <button id="confirmBooking" type="button" class="bg-blue-600 text-white px-4 py-2 rounded-lg mt-4 text-sm font-semibold shadow hover:bg-blue-700 transition">
-          ยืนยันการจอง
-        </button>
+      <div class="bg-white/90 rounded-2xl border border-slate-200 shadow p-4 md:p-6">
+        <h2 class="text-lg font-semibold mb-3">ผังที่นั่ง</h2>
+        <p class="text-sm text-slate-500 mb-4">แตะที่นั่งเพื่อเลือก (เลือกได้ 1 ที่)</p>
+        <div id="seatContainer" class="seat-container"></div>
+      </div>
+    </section>
+  </main>
 
-        <a href="/" class="block text-center mt-4 text-blue-600 hover:underline text-sm">ย้อนกลับไปหน้าแรก</a>
-      </form>
+  <!-- Modal -->
+  <div id="dialog" class="hidden fixed inset-0 bg-black/40 items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-md shadow-xl p-6">
+      <h3 class="text-lg font-semibold mb-3">ยืนยันการจอง</h3>
+      <p id="summary" class="text-sm text-slate-600 mb-4"></p>
+      <div class="flex justify-end gap-2">
+        <button id="cancel" class="h-10 px-4 rounded-xl border">ยกเลิก</button>
+        <button id="confirm" class="h-10 px-4 rounded-xl text-white hover:brightness-110" style="background:var(--primary)">ยืนยัน</button>
+      </div>
     </div>
-
-    <!-- ด้านขวา: 70% แสดงภาพห้องและที่นั่ง -->
-<div class="col-span-10 md:col-span-7 bg-white p-6 rounded-xl shadow-lg">
-  <div class="flex flex-col items-center">
-    <img id="roomImage" src="/static/img/image0_0.jpg" alt="แผนผังห้อง" class="w-full h-full object-cover rounded-lg border" />
   </div>
-    <p class="text-center text-sm text-gray-500 mt-4">แตะที่นั่งเพื่อเลือก</p>
-  </div>
-</div>
-</div>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script>
+    // ===== flatpickr =====
     flatpickr("#start_time", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
-    flatpickr("#end_time", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
+    flatpickr("#end_time",   { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
 
+    // ===== room image mapping =====
     const roomImage = document.getElementById("roomImage");
     const roomSelect = document.getElementById("room");
-
     const roomImages = {
       "1": "/static/img/image0_0.jpg",
       "2": "/static/img/image1_0.jpg",
@@ -92,138 +176,138 @@
       "4": "/static/img/image1_0.jpg",
       "5": "/static/img/image0_0.jpg"
     };
-
     roomSelect.addEventListener("change", (e) => {
-      const roomId = e.target.value;
-      roomImage.src = roomImages[roomId] || "/static/img/default.jpg";
+      roomImage.src = roomImages[e.target.value] || "/static/img/default.jpg";
+      fetchBookedSeats();
+    });
+
+    // ===== Booking state =====
+    let bookedSeats = [];
+    let bookedInfo = {};
+    const seatContainer = document.getElementById("seatContainer");
+
+    function createSeatElement(seatNumber) {
+      const seat = document.createElement("button");
+      seat.type = "button";
+      seat.className = "seat w-12 h-12 rounded-2xl border border-slate-200 grid place-items-center text-sm font-semibold shadow-sm";
+      seat.textContent = seatNumber;
+
+      const seatStr = String(seatNumber);
+      if (bookedSeats.includes(seatStr)) {
+        seat.classList.add("taken");
+        seat.title = `ถูกจองโดย ${bookedInfo[seatStr] || "ผู้ใช้คนอื่น"}`;
+        seat.disabled = true;
+      } else {
+        seat.classList.add("available");
+        seat.addEventListener("click", () => {
+          document.querySelectorAll(".seat.selected").forEach(s => s.classList.remove("selected"));
+          seat.classList.toggle("selected");
+        });
+      }
+      return seat;
+    }
+
+    function renderSeats() {
+      const room = document.getElementById("room").value;
+      seatContainer.innerHTML = "";
+
+      const seatCount = { '1': 10, '2': 20, '3': 15, '4': 10, '5': 30 };
+      const totalSeats = seatCount[room];
+      const desks = Math.ceil(totalSeats / 4);
+      let seatNumber = 1;
+
+      // กลุ่มละ 2 ที่นั่ง – โต๊ะ – 2 ที่นั่ง, เรียงซ้าย→ขวา (flex-wrap)
+      for (let d = 0; d < desks; d++) {
+        const group = document.createElement("div");
+        group.className = "seat-group";
+
+        const top = document.createElement("div");
+        top.className = "row";
+        for (let i = 0; i < 2 && seatNumber <= totalSeats; i++) top.appendChild(createSeatElement(seatNumber++));
+        group.appendChild(top);
+
+        const desk = document.createElement("div");
+        desk.className = "desk";
+        desk.textContent = "โต๊ะ " + (d + 1);
+        group.appendChild(desk);
+
+        const bottom = document.createElement("div");
+        bottom.className = "row";
+        for (let i = 0; i < 2 && seatNumber <= totalSeats; i++) bottom.appendChild(createSeatElement(seatNumber++));
+        group.appendChild(bottom);
+
+        seatContainer.appendChild(group);
+      }
+    }
+
+    async function fetchBookedSeats() {
+      const room = document.getElementById("room").value;
+      const date = document.getElementById("date").value;
+      const startTime = document.getElementById("start_time").value;
+      const endTime = document.getElementById("end_time").value;
+
+      if (!date || !startTime || !endTime) {
+        bookedSeats = []; bookedInfo = {}; renderSeats(); return;
+      }
+
+      const res = await fetch(`/api/booked_seats?room=${room}&date=${date}&start_time=${startTime}&end_time=${endTime}`);
+      const data = await res.json();
+      bookedSeats = data.map(x => x.seat);
+      bookedInfo = Object.fromEntries(data.map(x => [x.seat, x.user]));
+      renderSeats();
+    }
+
+    // ===== Modal =====
+    const dialog = document.getElementById("dialog");
+    const summary = document.getElementById("summary");
+
+    document.getElementById("openConfirm").addEventListener("click", () => {
+      const chosen = document.querySelector(".seat.selected");
+      if (!chosen) { alert("กรุณาเลือกที่นั่งก่อน!"); return; }
+      const date = document.getElementById("date").value;
+      const start = document.getElementById("start_time").value;
+      const end = document.getElementById("end_time").value;
+      const room = document.getElementById("room").value;
+      if (!date || !start || !end) { alert("กรุณาเลือกวันและเวลา"); return; }
+
+      summary.textContent = `ที่นั่ง ${chosen.textContent} • ห้อง ${room} • ${date} ${start} - ${end}`;
+      dialog.classList.remove("hidden");
+      dialog.classList.add("flex");
+    });
+
+    document.getElementById("cancel").addEventListener("click", () => {
+      dialog.classList.add("hidden");
+      dialog.classList.remove("flex");
+    });
+
+    document.getElementById("confirm").addEventListener("click", async () => {
+      const selectedSeat = document.querySelector(".seat.selected")?.textContent;
+      const date = document.getElementById("date").value;
+      const startTime = document.getElementById("start_time").value;
+      const endTime = document.getElementById("end_time").value;
+      const room = document.getElementById("room").value;
+
+      const resp = await fetch("/booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ date, start_time: startTime, end_time: endTime, room, seat: selectedSeat || "" })
+      });
+      const result = await resp.json();
+      alert((resp.ok ? "✅ " : "❌ ") + (result.message || result.error || ""));
+      dialog.classList.add("hidden"); dialog.classList.remove("flex");
+      fetchBookedSeats();
+    });
+
+    // ===== Init =====
+    ["date","start_time","end_time","room"].forEach(id =>
+      document.getElementById(id).addEventListener("change", fetchBookedSeats)
+    );
+    document.addEventListener("DOMContentLoaded", () => {
+      const d = new Date();
+      const z = (n) => String(n).padStart(2,"0");
+      document.getElementById("date").value = `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`;
+      fetchBookedSeats();
     });
   </script>
-<script>
-let bookedSeats = [];
-let bookedInfo = {};
-
-async function fetchBookedSeats() {
-  const room = document.getElementById("room").value;
-  const date = document.getElementById("date").value;
-  const startTime = document.getElementById("start_time").value;
-  const endTime = document.getElementById("end_time").value;
-
-  if (!date || !startTime || !endTime) {
-    bookedSeats = [];
-    bookedInfo = {};
-    renderSeats();
-    return;
-  }
-
-  const res = await fetch(`/api/booked_seats?room=${room}&date=${date}&start_time=${startTime}&end_time=${endTime}`);
-  const data = await res.json();
-
-  bookedSeats = data.map(item => item.seat);
-  bookedInfo = Object.fromEntries(data.map(item => [item.seat, item.user]));
-  renderSeats();
-}
-
-function renderSeats() {
-  const seatContainer = document.getElementById("seatContainer");
-  const room = document.getElementById("room").value;
-  seatContainer.innerHTML = "";
-
-  const seatCount = { '1': 10, '2': 20, '3': 15, '4': 10, '5': 30 };
-  const totalSeats = seatCount[room];
-  const desks = Math.ceil(totalSeats / 4);
-  let seatNumber = 1;
-
-  for (let d = 0; d < desks; d++) {
-    const seatGroup = document.createElement('div');
-    seatGroup.classList.add('seat-group');
-
-    const topRow = document.createElement('div');
-    topRow.classList.add('flex', 'gap-4');
-    for (let i = 0; i < 2 && seatNumber <= totalSeats; i++) {
-      const seat = createSeatElement(seatNumber++);
-      topRow.appendChild(seat);
-    }
-    seatGroup.appendChild(topRow);
-
-    const desk = document.createElement('div');
-    desk.classList.add('desk');
-    desk.textContent = 'โต๊ะ ' + (d + 1);
-    seatGroup.appendChild(desk);
-
-    const bottomRow = document.createElement('div');
-    bottomRow.classList.add('flex', 'gap-4');
-    for (let i = 0; i < 2 && seatNumber <= totalSeats; i++) {
-      const seat = createSeatElement(seatNumber++);
-      bottomRow.appendChild(seat);
-    }
-    seatGroup.appendChild(bottomRow);
-
-    seatContainer.appendChild(seatGroup);
-  }
-}
-
-function createSeatElement(seatNumber) {
-  const seat = document.createElement("div");
-  seat.classList.add("seat", "w-12", "h-12", "bg-gray-400", "flex", "items-center", "justify-center", "rounded-lg", "text-white", "font-bold", "cursor-pointer", "transition", "shadow-md");
-  seat.textContent = seatNumber;
-
-  const seatStr = seatNumber.toString();
-
-  if (bookedSeats.includes(seatStr)) {
-    seat.classList.add("booked");
-    seat.classList.remove("cursor-pointer");
-    seat.title = `ที่นั่งนี้ถูกจองโดย ${bookedInfo[seatStr] || "ผู้ใช้คนอื่น"}`;
-  } else {
-    seat.addEventListener("click", () => seat.classList.toggle("selected"));
-  }
-
-  return seat;
-}
-
-document.getElementById("confirmBooking").addEventListener("click", async () => {
-  const selectedSeats = [...document.querySelectorAll(".seat.selected")].map(seat => seat.textContent);
-  if (selectedSeats.length === 0) {
-    alert("กรุณาเลือกที่นั่งก่อน!");
-    return;
-  }
-
-  const date = document.getElementById("date").value;
-  const startTime = document.getElementById("start_time").value;
-  const endTime = document.getElementById("end_time").value;
-  const room = document.getElementById("room").value;
-
-  if (!date || !startTime || !endTime || !room) {
-    alert("กรุณากรอกข้อมูลให้ครบถ้วน!");
-    return;
-  }
-
-  const response = await fetch("/booking", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      date: date,
-      start_time: startTime,
-      end_time: endTime,
-      room: room,
-      seat: selectedSeats[0]
-    })
-  });
-
-  const result = await response.json();
-
-  if (response.ok) {
-    alert("✅ " + result.message);
-    fetchBookedSeats();
-  } else {
-    alert("❌ " + result.error);
-  }
-});
-
-["date", "start_time", "end_time", "room"].forEach(id => {
-  document.getElementById(id).addEventListener("change", fetchBookedSeats);
-});
-
-document.addEventListener("DOMContentLoaded", fetchBookedSeats);
-</script>
 </body>
 </html>

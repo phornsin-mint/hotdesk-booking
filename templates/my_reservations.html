@@ -1,0 +1,204 @@
+<!-- File: templates/my_reservations.html -->
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Reservations • Hot Desk Booking</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{ --primary: hsl(217 91% 60%); }
+    .badge{ display:inline-flex; align-items:center; gap:.4rem; height:1.75rem; padding:0 .6rem; border-radius:.75rem; font-size:.75rem; font-weight:600; }
+    .badge.upcoming{ background:hsl(217 91% 95%); color:hsl(217 91% 35%); }
+    .badge.confirmed{ background:hsl(214 32% 91%); color:hsl(222 47% 11%); }
+    .badge.completed{ border:1px solid hsl(214 32% 85%); color:hsl(215 16% 47%); }
+    .shadow-soft{ box-shadow:0 6px 12px hsl(217 91% 60% / .08); }
+    .shadow-medium{ box-shadow:0 16px 28px hsl(217 91% 60% / .14); }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900">
+<!-- Navbar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md shadow-sm">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="flex justify-between items-center h-16">
+      <a href="/" class="text-2xl font-bold text-blue-600 tracking-wide hover:opacity-80">HotDesk IPST</a>
+
+      <div class="flex items-center space-x-2">
+        <!-- หน้าแรก -->
+        <a href="/"
+           class="px-3 py-2 rounded-md transition
+           {% if request.path == '/' %} bg-blue-600 text-white {% else %} text-gray-700 hover:text-blue-600 {% endif %}">
+          Home
+        </a>
+
+        <!-- จองที่นั่ง -->
+        <a href="/booking"
+           class="px-3 py-2 rounded-md transition
+           {% if request.path.startswith('/booking') %} bg-blue-600 text-white {% else %} text-gray-700 hover:text-blue-600 {% endif %}">
+          Booking
+        </a>
+
+        <!-- My Reservations -->
+        <a href="/my-reservations"
+           class="px-3 py-2 rounded-md transition
+           {% if request.path.startswith('/my-reservations') %} bg-blue-600 text-white {% else %} text-gray-700 hover:text-blue-600 {% endif %}">
+          My Reservations
+        </a>
+
+        <!-- ปุ่ม Logout -->
+        <a href="/logout"
+           class="ml-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow hover:bg-red-600 transition">
+          Logout
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-10">
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold mb-2">My Reservations</h1>
+      <p class="text-slate-600">Manage your current and past desk bookings</p>
+    </div>
+
+    <div id="emptyState" class="hidden bg-white border rounded-2xl shadow-soft p-10 text-center">
+      <div class="mx-auto mb-4 w-16 h-16 rounded-full grid place-items-center bg-slate-100">📅</div>
+      <h3 class="text-xl font-semibold mb-2">ยังไม่มีการจอง</h3>
+      <p class="text-slate-600 mb-6">เริ่มต้นจองที่นั่งแรกของคุณได้เลย</p>
+      <a href="/booking" class="inline-flex items-center justify-center h-11 px-5 rounded-xl text-white hover:brightness-110" style="background:var(--primary)">ไปที่หน้าจอง</a>
+    </div>
+
+    <div id="list" class="space-y-4"></div>
+
+    <!-- Quick Stats -->
+    <div id="stats" class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8"></div>
+  </main>
+
+  <script>
+    // --- Helpers ---
+    function fmtDate(dstr){
+      const d = new Date(dstr + 'T00:00:00');
+      return d.toLocaleDateString('th-TH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    }
+
+    function badge(status){
+      const span = document.createElement('span');
+      span.className = 'badge ' + status;
+      span.textContent =
+        status === 'upcoming' ? 'Upcoming' :
+        status === 'confirmed' ? 'Confirmed' :
+        'Completed';
+      return span;
+    }
+
+function card(res){
+  const wrap = document.createElement('article');
+  wrap.className = 'bg-white border rounded-2xl shadow-soft hover:shadow-medium transition p-4';
+
+  wrap.innerHTML = `
+    <!-- Header: Room + Seat -->
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-lg font-semibold">ห้อง ${res.room} • Seat ${res.seat}</h3>
+      <div id="badge-${res.id}"></div>
+    </div>
+
+    <!-- Date & Time -->
+    <div class="text-sm text-slate-600 flex flex-wrap gap-4 mb-2">
+      <span>📅 ${fmtDate(res.date)}</span>
+      <span>⏰ ${res.start_time} - ${res.end_time}</span>
+      <span>📍 ห้อง ${res.room}</span>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-4 flex items-center justify-between">
+      <div class="text-sm text-slate-500">หมายเลขการจอง: ${res.id}</div>
+      <div>
+        <button class="cancelBtn h-9 px-3 rounded-xl border text-red-600 hover:bg-red-600 hover:text-white transition"
+                data-id="${res.id}">
+          ยกเลิกการจอง
+        </button>
+      </div>
+    </div>
+  `;
+
+  const b = badge(res.status);
+  wrap.querySelector('#badge-'+res.id).appendChild(b);
+  return wrap;
+}
+
+
+
+    // เรียงรายการให้ "ล่าสุดอยู่บนสุด" โดยเทียบ date+start_time (DESC)
+    function sortByNewestFirst(list){
+      return [...list].sort((a,b)=>{
+        // ป้องกันค่าเว้นว่าง
+        const aTime = a.start_time || '00:00';
+        const bTime = b.start_time || '00:00';
+        const da = new Date(`${a.date}T${aTime}`);
+        const db = new Date(`${b.date}T${bTime}`);
+        return db - da; // ใหม่ก่อน
+      });
+    }
+
+    function render(list){
+      const listEl = document.getElementById('list');
+      const empty = document.getElementById('emptyState');
+      listEl.innerHTML = '';
+
+      if(!list || list.length===0){
+        empty.classList.remove('hidden');
+        document.getElementById('stats').innerHTML = '';
+        return;
+      }
+      empty.classList.add('hidden');
+
+      const sorted = sortByNewestFirst(list);
+      sorted.forEach(r=> listEl.appendChild(card(r)));
+
+      // Stats
+      const statsEl = document.getElementById('stats');
+      const total = sorted.length;
+      const upcoming = sorted.filter(r=> r.status==='upcoming' || r.status==='confirmed').length;
+      const completed = sorted.filter(r=> r.status==='completed').length;
+      statsEl.innerHTML = `
+        <div class="bg-white border rounded-2xl shadow-soft text-center p-5">
+          <div class="text-2xl text-blue-600">${total}</div>
+          <div class="text-slate-600">Total Bookings</div>
+        </div>
+        <div class="bg-white border rounded-2xl shadow-soft text-center p-5">
+          <div class="text-2xl text-green-600">${upcoming}</div>
+          <div class="text-slate-600">Upcoming</div>
+        </div>
+        <div class="bg-white border rounded-2xl shadow-soft text-center p-5">
+          <div class="text-2xl text-slate-500">${completed}</div>
+          <div class="text-slate-600">Completed</div>
+        </div>`;
+      
+      // Bind cancel buttons
+      listEl.querySelectorAll('.cancelBtn').forEach(btn=>{
+        btn.addEventListener('click', async ()=>{
+          const id = btn.dataset.id;
+          if(!confirm('ยืนยันการยกเลิกการจองนี้?')) return;
+          const resp = await fetch('/api/cancel_booking', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ id })
+          });
+          const data = await resp.json();
+          alert(data.message || data.error || (resp.ok? 'ยกเลิกสำเร็จ':'ไม่สำเร็จ'));
+          load();
+        });
+      });
+    }
+
+    async function load(){
+      const resp = await fetch('/api/my_reservations');
+      const data = await resp.json();
+      render(data);
+    }
+
+    document.addEventListener('DOMContentLoaded', load);
+  </script>
+</body>
+</html>
